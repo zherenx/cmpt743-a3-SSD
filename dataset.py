@@ -177,12 +177,12 @@ class COCO(torch.utils.data.Dataset):
         #For example, point (x=100, y=200) in a image with (width=1000, height=500) will be normalized to (x/width=0.1,y/height=0.4)
         
         # TODO: augmentation 
-        
+
         img = cv2.imread(img_name)
         img_h, img_w, img_c = img.shape
 
         img = cv2.resize(img, (320, 320))
-        img = np.transpose(img, (2, 1, 0)) # Why do we need to do this?? and should it be (2, 1, 0) or (2, 0, 1)?
+        img = np.transpose(img, (2, 0, 1)) # Why do we need to do this?? and should it be (2, 1, 0) or (2, 0, 1)?
 
         annotations_txt = open(ann_name)
         annotations = annotations_txt.readlines()
