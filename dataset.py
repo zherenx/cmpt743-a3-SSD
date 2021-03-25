@@ -91,16 +91,40 @@ def match(ann_box,ann_confidence,boxs_default,threshold,cat_id,x_min,y_min,x_max
     #compute iou between the default bounding boxes and the ground truth bounding box
     ious = iou(boxs_default, x_min,y_min,x_max,y_max)
     
-    ious_true = ious>threshold
+    # ious_true = ious>threshold
     #TODO:
     #update ann_box and ann_confidence, with respect to the ious and the default bounding boxes.
     #if a default bounding box and the ground truth bounding box have iou>threshold, then we will say this default bounding box is carrying an object.
     #this default bounding box will be used to update the corresponding entry in ann_box and ann_confidence
+    if cat_id == 0:
+        one_hot_label = np.array([1, 0, 0, 0], dtype=float)
+    elif cat_id == 1:
+        one_hot_label = np.array([0, 1, 0, 0], dtype=float)
+    elif cat_id == 2:
+        one_hot_label = np.array([0, 0, 1, 0], dtype=float)
+
+    gt_w = x_max - x_min
+    gt_h = y_max - y_min
+    gt_box = [x_min + gt_w / 2.0, 
+              y_min + gt_h / 2.0, 
+              gt_w, 
+              gt_h]
+
+    ious_true = (ious > threshold) | np.argmax(ious)
+
+    ann_box[ious_true, :] = np.array([(gt_box[0] - boxs_default[ious_true, 0]) / boxs_default[ious_true, 2], 
+                                      (gt_box[1] - boxs_default[ious_true, 1]) / boxs_default[ious_true, 3],
+                                      np.log(gt_box[2] / boxs_default[ious_true, 2]), 
+                                      np.log(gt_box[3] / boxs_default[ious_true, 3])])
     
-    ious_true = np.argmax(ious)
+    ann_confidence[ious_true, :] = one_hot_label
+    
+    # ious_true = np.argmax(ious)
     #TODO:
     #make sure at least one default bounding box is used
     #update ann_box and ann_confidence (do the same thing as above)
+    
+    # This part is done above
 
 
 
@@ -152,5 +176,34 @@ class COCO(torch.utils.data.Dataset):
         #note: please make sure x_min,y_min,x_max,y_max are normalized with respect to the width or height of the image.
         #For example, point (x=100, y=200) in a image with (width=1000, height=500) will be normalized to (x/width=0.1,y/height=0.4)
         
+        # TODO: augmentation 
         
-        return image, ann_box, ann_confidence
+        img = cv2.imread(img_name)
+        img_h, img_w, img_c = img.shape
+
+        img = cv2.resize(img, (320, 320))
+        img = np.transpose(img, (2, 1, 0)) # Why do we need to do this?? and should it be (2, 1, 0) or (2, 0, 1)?
+
+        annotations_txt = open(ann_name)
+        annotations = annotations_txt.readlines()
+        annotations_txt.close()
+
+        for i in range(len(annotations)):
+            line = annotations[i].split()
+            cat_id = int(line[0])
+            
+            x_min = float(line[1])
+            y_min = float(line[2])
+            w = float(line[3])
+            h = float(line[4])
+            x_max = x_min + w
+            y_max = y_max + h
+            
+            x_min = x_min / img_w
+            y_min = y_min / img_h
+            x_max = x_max / img_w
+            y_max = y_max / img_h
+
+            match(ann_box, ann_confidence, self.boxs_default, self.threshold, cat_id, x_min, y_min, x_max, y_max)
+            
+        return img, ann_box, ann_confidence
