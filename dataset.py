@@ -42,7 +42,7 @@ def default_box_generator(layers, large_scale, small_scale):
     boxes = np.zeros((135*4, 8))
     box_index = 0
 
-    for k in range(layers):
+    for k in range(len(layers)):
 
         for i in range(layers[k]):
             for j in range(layers[k]):
