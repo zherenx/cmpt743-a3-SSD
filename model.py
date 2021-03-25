@@ -47,7 +47,7 @@ def SSD_loss(pred_confidence, pred_box, ann_confidence, ann_box):
     noobj = -is_obj
     cls_loss = F.cross_entropy(pred_confidence[is_obj, :], ann_confidence[is_obj, :]) + \
                3 * F.cross_entropy(pred_confidence[noobj, :], ann_confidence[noobj, :])
-    box_loss = F.pairwise_distance(pred_box[is_obj, :], ann_box[is_obj, :], p=1)
+    box_loss = F.smooth_l1_loss(pred_box[is_obj, :], ann_box[is_obj, :])
 
     loss = cls_loss + box_loss
 
