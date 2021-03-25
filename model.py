@@ -132,17 +132,17 @@ class SSD(nn.Module):
             nn.ReLU(True)
         )
 
-        self.box1 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
-        self.confidence1 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_box1 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_confidence1 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
 
-        self.box2 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
-        self.confidence2 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_box2 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_confidence2 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
         
-        self.box3 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
-        self.confidence3 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_box3 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_confidence3 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
 
-        self.box4 = nn.Conv2d(256, 16, kernel_size=1, stride=1)
-        self.confidence4 = nn.Conv2d(256, 16, kernel_size=1, stride=1)
+        self.conv_box4 = nn.Conv2d(256, 16, kernel_size=1, stride=1)
+        self.conv_confidence4 = nn.Conv2d(256, 16, kernel_size=1, stride=1)
         
     def forward(self, x):
         #input:
