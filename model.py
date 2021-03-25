@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
+from torch.nn.modules.conv import Conv2d
 import torch.optim as optim
 import torch.utils.data
 import torchvision.datasets as dset
@@ -49,7 +50,99 @@ class SSD(nn.Module):
         self.class_num = class_num #num_of_classes, in this assignment, 4: cat, dog, person, background
         
         #TODO: define layers
+        self.vgg_base = nn.Sequential(
+            # conv1
+            nn.Conv2d(3, 64, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(True),
+            # conv2
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(True),
+            # conv3
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(64),
+            nn.ReLU(True),
+            # conv4
+            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            # conv5
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            # conv6
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+            # conv7
+            nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            # conv8
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            # conv9
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            # conv10
+            nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            # conv11
+            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            # conv12
+            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True),
+            # conv13
+            nn.Conv2d(512, 256, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True)
+        )
+
+        self.down1 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=1, stride=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            nn.Conv2d(256, 256, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True)
+        )
+
+        self.down2 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=1, stride=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True)
+        )
+
+        self.down3 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=1, stride=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True)
+        )
+
+        self.box1 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.confidence1 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+
+        self.box2 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.confidence2 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
         
+        self.box3 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.confidence3 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+
+        self.box4 = nn.Conv2d(256, 16, kernel_size=1, stride=1)
+        self.confidence4 = nn.Conv2d(256, 16, kernel_size=1, stride=1)
         
     def forward(self, x):
         #input:
