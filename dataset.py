@@ -11,6 +11,13 @@ import torch.nn.functional as F
 import numpy as np
 import os
 import cv2
+from math import sqrt
+
+
+def generate_box(x, y, w, h):
+    box = np.array([x, y, w, h, x-w/2.0, y-h/2.0, x+w/2.0, y+h/2.0], dtype=float)
+    box = np.clip(box, a_min=0, a_max=1)
+    return box
 
 #generate default bounding boxes
 def default_box_generator(layers, large_scale, small_scale):
@@ -32,6 +39,24 @@ def default_box_generator(layers, large_scale, small_scale):
     #for a cell in layer[i], you should use ssize=small_scale[i] and lsize=large_scale[i].
     #the last dimension 8 means each default bounding box has 8 attributes: [x_center, y_center, box_width, box_height, x_min, y_min, x_max, y_max]
     
+    boxes = np.zeros((135*4, 8))
+    box_index = 0
+
+    for k in range(layers):
+
+        for i in range(layers[k]):
+            for j in range(layers[k]):
+
+                x_center = (0.5 + i) / layers[k]
+                y_center = (0.5 + j) / layers[k]
+
+                boxes[box_index, :] = generate_box(x_center, y_center, small_scale[k], small_scale[k])
+                boxes[box_index+1, :] = generate_box(x_center, y_center, large_scale[k], large_scale[k])
+                boxes[box_index+2, :] = generate_box(x_center, y_center, large_scale[k]*sqrt(2), large_scale[k]/sqrt(2))
+                boxes[box_index+3, :] = generate_box(x_center, y_center, large_scale[k]/sqrt(2), large_scale[k]*sqrt(2))
+
+                box_index = box_index + 4
+
     return boxes
 
 
