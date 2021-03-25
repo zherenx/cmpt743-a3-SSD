@@ -47,8 +47,9 @@ def default_box_generator(layers, large_scale, small_scale):
         for i in range(layers[k]):
             for j in range(layers[k]):
 
-                x_center = (0.5 + i) / layers[k]
-                y_center = (0.5 + j) / layers[k]
+                # row by row because of how torch.view work?? not sure??
+                x_center = (0.5 + j) / layers[k]
+                y_center = (0.5 + i) / layers[k]
 
                 boxes[box_index, :] = generate_box(x_center, y_center, small_scale[k], small_scale[k])
                 boxes[box_index+1, :] = generate_box(x_center, y_center, large_scale[k], large_scale[k])
