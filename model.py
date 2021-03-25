@@ -15,8 +15,6 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 
-
-
 def SSD_loss(pred_confidence, pred_box, ann_confidence, ann_box):
     #input:
     #pred_confidence -- the predicted class labels from SSD, [batch_size, num_of_boxes, num_of_classes]
@@ -39,8 +37,21 @@ def SSD_loss(pred_confidence, pred_box, ann_confidence, ann_box):
     #Then you need to figure out how you can get the indices of all cells carrying objects,
     #and use confidence[indices], box[indices] to select those cells.
 
+    [batch_size, num_of_boxes, num_of_classes] = list(ann_confidence.shape)
+    pred_confidence = torch.reshape(pred_confidence, (batch_size * num_of_boxes, num_of_classes))
+    ann_confidence = torch.reshape(ann_confidence, (batch_size * num_of_boxes, num_of_classes))
+    pred_box = torch.reshape(pred_box, (batch_size * num_of_boxes, 4))
+    ann_box = torch.reshape(ann_box, (batch_size * num_of_boxes, 4))
 
+    is_obj = (ann_confidence[:, -1] == 0)
+    noobj = -is_obj
+    cls_loss = F.cross_entropy(pred_confidence[is_obj, :], ann_confidence[is_obj, :]) + \
+               3 * F.cross_entropy(pred_confidence[noobj, :], ann_confidence[noobj, :])
+    box_loss = F.pairwise_distance(pred_box[is_obj, :], ann_box[is_obj, :], p=1)
 
+    loss = cls_loss + box_loss
+
+    return loss
 
 class SSD(nn.Module):
 
