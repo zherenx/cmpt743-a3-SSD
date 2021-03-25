@@ -157,8 +157,41 @@ class SSD(nn.Module):
         #sanity check: print the size/shape of the confidence and bboxes, make sure they are as follows:
         #confidence - [batch_size,4*(10*10+5*5+3*3+1*1),num_of_classes]
         #bboxes - [batch_size,4*(10*10+5*5+3*3+1*1),4]
-        
-        return confidence,bboxes
+
+        x = self.vgg_base(x)
+        box1 = self.conv_box1(x)
+        box1 = torch.reshape(box1, (-1, 16, 100))
+        confidence1 = self.conv_confidence1(x)
+        confidence1 = torch.reshape(confidence1, (-1, 16, 100))
+
+        x = self.down1(x)
+        box2 = self.conv_box1(x)
+        box2 = torch.reshape(box2, (-1, 16, 25))
+        confidence2 = self.conv_confidence1(x)
+        confidence2 = torch.reshape(confidence2, (-1, 16, 25))
+
+        x = self.down2(x)
+        box3 = self.conv_box1(x)
+        box3 = torch.reshape(box3, (-1, 16, 9))
+        confidence3 = self.conv_confidence1(x)
+        confidence3 = torch.reshape(confidence3, (-1, 16, 9))
+
+        x = self.down3(x)
+        box4 = self.conv_box1(x)
+        box4 = torch.reshape(box4, (-1, 16, 1))
+        confidence4 = self.conv_confidence1(x)
+        confidence4 = torch.reshape(confidence4, (-1, 16, 1))
+
+        bboxes = torch.cat((box1, box2, box3, box4), 2)
+        confidence = torch.cat((confidence1, confidence2, confidence3, confidence4), 2)
+
+        bboxes = bboxes.permute(0, 2, 1)
+        confidence = confidence.permute(0, 2, 1)
+
+        bboxes = torch.reshape(bboxes, (-1, 540, 4))
+        confidence = torch.reshape(confidence, (-1, 540, 4))
+
+        return confidence, bboxes
 
 
 
