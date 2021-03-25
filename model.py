@@ -133,16 +133,16 @@ class SSD(nn.Module):
         )
 
         self.conv_box1 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
-        self.conv_confidence1 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_confidence1 = nn.Conv2d(256, self.class_num * 4, kernel_size=3, stride=1, padding=1)
 
         self.conv_box2 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
-        self.conv_confidence2 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_confidence2 = nn.Conv2d(256, self.class_num * 4, kernel_size=3, stride=1, padding=1)
         
         self.conv_box3 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
-        self.conv_confidence3 = nn.Conv2d(256, 16, kernel_size=3, stride=1, padding=1)
+        self.conv_confidence3 = nn.Conv2d(256, self.class_num * 4, kernel_size=3, stride=1, padding=1)
 
         self.conv_box4 = nn.Conv2d(256, 16, kernel_size=1, stride=1)
-        self.conv_confidence4 = nn.Conv2d(256, 16, kernel_size=1, stride=1)
+        self.conv_confidence4 = nn.Conv2d(256, self.class_num * 4, kernel_size=1, stride=1)
         
     def forward(self, x):
         #input:
@@ -162,25 +162,25 @@ class SSD(nn.Module):
         box1 = self.conv_box1(x)
         box1 = torch.reshape(box1, (-1, 16, 100))
         confidence1 = self.conv_confidence1(x)
-        confidence1 = torch.reshape(confidence1, (-1, 16, 100))
+        confidence1 = torch.reshape(confidence1, (-1, self.class_num * 4, 100))
 
         x = self.down1(x)
         box2 = self.conv_box1(x)
         box2 = torch.reshape(box2, (-1, 16, 25))
         confidence2 = self.conv_confidence1(x)
-        confidence2 = torch.reshape(confidence2, (-1, 16, 25))
+        confidence2 = torch.reshape(confidence2, (-1, self.class_num * 4, 25))
 
         x = self.down2(x)
         box3 = self.conv_box1(x)
         box3 = torch.reshape(box3, (-1, 16, 9))
         confidence3 = self.conv_confidence1(x)
-        confidence3 = torch.reshape(confidence3, (-1, 16, 9))
+        confidence3 = torch.reshape(confidence3, (-1, self.class_num * 4, 9))
 
         x = self.down3(x)
         box4 = self.conv_box1(x)
         box4 = torch.reshape(box4, (-1, 16, 1))
         confidence4 = self.conv_confidence1(x)
-        confidence4 = torch.reshape(confidence4, (-1, 16, 1))
+        confidence4 = torch.reshape(confidence4, (-1, self.class_num * 4, 1))
 
         bboxes = torch.cat((box1, box2, box3, box4), 2)
         confidence = torch.cat((confidence1, confidence2, confidence3, confidence4), 2)
@@ -189,7 +189,7 @@ class SSD(nn.Module):
         confidence = confidence.permute(0, 2, 1)
 
         bboxes = torch.reshape(bboxes, (-1, 540, 4))
-        confidence = torch.reshape(confidence, (-1, 540, 4))
+        confidence = torch.reshape(confidence, (-1, 540, self.class_num))
 
         return confidence, bboxes
 
