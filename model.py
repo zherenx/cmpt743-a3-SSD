@@ -43,10 +43,16 @@ def SSD_loss(pred_confidence, pred_box, ann_confidence, ann_box):
     pred_box = torch.reshape(pred_box, (batch_size * num_of_boxes, 4))
     ann_box = torch.reshape(ann_box, (batch_size * num_of_boxes, 4))
 
+    # print(torch.max(ann_confidence))
+    # print(torch.min(ann_confidence))
+    # print(torch.max(pred_confidence))
+    # print(torch.min(pred_confidence))
+
+
     is_obj = (ann_confidence[:, -1] == 0)
-    noobj = -is_obj
-    cls_loss = F.cross_entropy(pred_confidence[is_obj, :], ann_confidence[is_obj, :]) + \
-               3 * F.cross_entropy(pred_confidence[noobj, :], ann_confidence[noobj, :])
+    noobj = ~is_obj
+    cls_loss = F.binary_cross_entropy(pred_confidence[is_obj, :], ann_confidence[is_obj, :]) + \
+               3 * F.binary_cross_entropy(pred_confidence[noobj, :], ann_confidence[noobj, :])
     box_loss = F.smooth_l1_loss(pred_box[is_obj, :], ann_box[is_obj, :])
 
     loss = cls_loss + box_loss
@@ -201,6 +207,11 @@ class SSD(nn.Module):
 
         bboxes = torch.reshape(bboxes, (-1, 540, 4))
         confidence = torch.reshape(confidence, (-1, 540, self.class_num))
+
+        confidence = F.softmax(confidence, dim=2)
+        # print(confidence[0, 0, :])
+        # print(confidence[0, 1, :])
+        # print(confidence[0, 2, :])
 
         return confidence, bboxes
 
