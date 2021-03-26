@@ -110,7 +110,7 @@ if not args.test:
         # visualize_pred("val", pred_confidence_, pred_box_, ann_confidence_[0].numpy(), ann_box_[0].numpy(), images_[0].numpy(), boxs_default)
         
         suppressed_boxes, pred_cat_ids, corresponding_default_boxes = non_maximum_suppression(pred_confidence_,pred_box_,boxs_default)
-        visualize_pred_custom("test", suppressed_boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy())
+        visualize_pred_custom("val", suppressed_boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy(), "epoch", epoch)
 
         #optional: compute F1
         #F1score = 2*precision*recall/np.maximum(precision+recall,1e-8)
@@ -149,7 +149,7 @@ else:
         # visualize_pred("test", pred_confidence_, pred_box_, ann_confidence_[0].numpy(), ann_box_[0].numpy(), images_[0].numpy(), boxs_default)
 
         suppressed_boxes, pred_cat_ids, corresponding_default_boxes = non_maximum_suppression(pred_confidence_,pred_box_,boxs_default)
-        visualize_pred_custom("test", suppressed_boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy())
+        visualize_pred_custom("test", suppressed_boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy(), "test", i)
         cv2.waitKey(1000)
 
 
