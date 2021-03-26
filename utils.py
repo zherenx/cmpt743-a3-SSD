@@ -82,7 +82,7 @@ def get_actual_boxes(boxes, boxs_default):
 #     #if you are using a server, you may not be able to display the image.
 #     #in that case, please save the image using cv2.imwrite and check the saved image for visualization.
 
-def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default_boxes, ann_confidence, ann_box, boxs_default, image_):
+def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default_boxes, ann_confidence, ann_box, boxs_default, image_, prefix="result", image_id=0):
     #input:
     #windowname      -- the name of the window to display the images
     #pred_confidence -- the predicted class labels from SSD, [num_of_boxes, num_of_classes]
@@ -150,10 +150,16 @@ def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default
     image[:h,w:] = image2
     image[h:,:w] = image3
     image[h:,w:] = image4
-    cv2.imshow(windowname+" [[gt_box,gt_dft],[pd_box,pd_dft]]",image)
-    cv2.waitKey(1)
+    # cv2.imshow(windowname+" [[gt_box,gt_dft],[pd_box,pd_dft]]",image)
+    # cv2.waitKey(1)
     #if you are using a server, you may not be able to display the image.
     #in that case, please save the image using cv2.imwrite and check the saved image for visualization.
+
+    cv2.imwrite(f"results/{windowname}/{prefix}-{image_id}", image)
+    # if windowname == "val":
+    #     cv2.imwrite('', image)
+    # elif windowname == "test":
+    #     cv2.imwrite('', image)
 
 def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.5, threshold=0.5):
     #input:
