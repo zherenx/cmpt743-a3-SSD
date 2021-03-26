@@ -75,6 +75,9 @@ if not args.test:
             
             avg_loss += loss_net.data
             avg_count += 1
+            
+            if i % 20 == 0:
+                print(f'current loss: {avg_loss / avg_count}')
 
         print('[%d] time: %f train loss: %f' % (epoch, time.time()-start_time, avg_loss/avg_count))
         
