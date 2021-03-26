@@ -100,11 +100,11 @@ def match(ann_box,ann_confidence,boxs_default,threshold,cat_id,x_min,y_min,x_max
     #if a default bounding box and the ground truth bounding box have iou>threshold, then we will say this default bounding box is carrying an object.
     #this default bounding box will be used to update the corresponding entry in ann_box and ann_confidence
     if cat_id == 0:
-        one_hot_label = np.array([1, 0, 0, 0], dtype=float)
+        one_hot_label = np.array([1, 0, 0, 0])
     elif cat_id == 1:
-        one_hot_label = np.array([0, 1, 0, 0], dtype=float)
+        one_hot_label = np.array([0, 1, 0, 0])
     elif cat_id == 2:
-        one_hot_label = np.array([0, 0, 1, 0], dtype=float)
+        one_hot_label = np.array([0, 0, 1, 0])
 
     gt_w = x_max - x_min
     gt_h = y_max - y_min
@@ -115,10 +115,12 @@ def match(ann_box,ann_confidence,boxs_default,threshold,cat_id,x_min,y_min,x_max
 
     ious_true = (ious > threshold) | np.argmax(ious)
 
-    ann_box[ious_true, :] = np.array([(gt_box[0] - boxs_default[ious_true, 0]) / boxs_default[ious_true, 2], 
-                                      (gt_box[1] - boxs_default[ious_true, 1]) / boxs_default[ious_true, 3],
-                                      np.log(gt_box[2] / boxs_default[ious_true, 2]), 
-                                      np.log(gt_box[3] / boxs_default[ious_true, 3])])
+    ann_box[ious_true, :] = np.column_stack((
+        (gt_box[0] - boxs_default[ious_true, 0]) / boxs_default[ious_true, 2], 
+        (gt_box[1] - boxs_default[ious_true, 1]) / boxs_default[ious_true, 3],
+        np.log(gt_box[2] / boxs_default[ious_true, 2]), 
+        np.log(gt_box[3] / boxs_default[ious_true, 3])
+    ))
     
     ann_confidence[ious_true, :] = one_hot_label
     
@@ -200,7 +202,7 @@ class COCO(torch.utils.data.Dataset):
             w = float(line[3])
             h = float(line[4])
             x_max = x_min + w
-            y_max = y_max + h
+            y_max = y_min + h
             
             x_min = x_min / img_w
             y_min = y_min / img_h
