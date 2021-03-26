@@ -1,10 +1,21 @@
 import numpy as np
 import cv2
-from dataset import iou
+from dataset import iou, generate_box
 
 
 colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 #use [blue green red] to represent different classes
+
+def get_actual_boxes(boxes, boxs_default):
+    actual_boxes = np.column_stack((
+        boxs_default[:, 2] * boxes[:, 0] + boxs_default[:, 0],
+        boxs_default[:, 3] * boxes[:, 1] + boxs_default[:, 1],
+        boxs_default[:, 2] * np.exp(boxes[:, 2]),
+        boxs_default[:, 3] * np.exp(boxes[:, 3])
+    ))
+
+    A = generate_box(actual_boxes[:, 0], actual_boxes[:, 1], actual_boxes[:, 2], actual_boxes[:, 3])
+    return A
 
 def visualize_pred(windowname, pred_confidence, pred_box, ann_confidence, ann_box, image_, boxs_default):
     #input:
@@ -88,6 +99,51 @@ def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.5, thresh
     
     
     #TODO: non maximum suppression
+
+    # actual_boxes = np.column_stack((
+    #     boxs_default[:, 2] * box_[:, 0] + boxs_default[:, 0],
+    #     boxs_default[:, 3] * box_[:, 1] + boxs_default[:, 1],
+    #     boxs_default[:, 2] * np.exp(box_[:, 2]),
+    #     boxs_default[:, 3] * np.exp(box_[:, 3])
+    # ))
+
+    # A = generate_box(actual_boxes[:, 0], actual_boxes[:, 1], actual_boxes[:, 2], actual_boxes[:, 3])
+
+    actual_boxes = get_actual_boxes(box_, boxs_default)
+
+    # suppressed_confidence = []
+    suppressed_boxes = []
+    pred_cat_ids = []
+
+    while confidence_.shape[0] > 0:
+        num_of_boxes, num_of_classes = confidence_.shape
+
+        max_index = np.unravel_index(np.argmax(confidence_[:, :-1], axis=None), (num_of_boxes, num_of_classes-1))
+        
+        if confidence_[max_index] > threshold:
+            x_confidence = confidence_[max_index[0], :-1] # discard background
+            x_box = actual_boxes[max_index[0], :]
+            np.delete(confidence_, max_index[0], 0)
+            np.delete(actual_boxes, max_index[0], 0)
+
+            # suppressed_confidence.append(x_confidence)
+            suppressed_boxes.append(x_box)
+            pred_cat_ids.append(np.argmax(x_confidence))
+
+            ious = iou(actual_boxes, x_box[4], x_box[5], x_box[6], x_box[7])
+
+            ious_true = ious > threshold
+
+            np.delete(actual_boxes, ious_true, 0)
+            np.delete(confidence_, ious_true, 0)
+
+        else:
+            break
+
+    suppressed_boxes = np.array(suppressed_boxes)
+    pred_cat_ids = np.array(pred_cat_ids)
+    
+    return suppressed_boxes, pred_cat_ids
 
 
 
