@@ -17,6 +17,12 @@ def get_actual_boxes(boxes, boxs_default):
     A = generate_box(actual_boxes[:, 0], actual_boxes[:, 1], actual_boxes[:, 2], actual_boxes[:, 3])
     return A
 
+def convert_to_real_scale(boxes, w, h):
+    boxes1 = np.zeros(boxes.shape)
+    boxes1[:, ::2] = boxes[:, ::2] * w
+    boxes1[:, 1::2] = boxes[:, 1::2] * h
+    return boxes1.astype(int)
+
 # def visualize_pred(windowname, pred_confidence, pred_box, ann_confidence, ann_box, image_, boxs_default):
 #     #input:
 #     #windowname      -- the name of the window to display the images
@@ -105,10 +111,22 @@ def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default
     #image2: draw ground truth "default" boxes on image2 (to show that you have assigned the object to the correct cell/cells)
     #image3: draw network-predicted bounding boxes on image3
     #image4: draw network-predicted "default" boxes on image4 (to show which cell does your network think that contains an object)
-    
+
+    h, w, c = image.shape
+
     gt_boxes = get_actual_boxes(ann_box, boxs_default)
+
+    gt_boxes1 = convert_to_real_scale(gt_boxes, w, h)
+    # boxs_default = convert_to_real_scale(boxs_default, w, h)
+    pred_boxes = convert_to_real_scale(pred_boxes, w, h)
+    corresponding_default_boxes = convert_to_real_scale(corresponding_default_boxes, w, h)
+    
     class_num = 3
     thickness = 2
+
+    # print(boxs_default[:4, :])
+    # print(gt_boxes)
+    # print(gt_boxes1)
 
     #draw ground truth
     for i in range(len(ann_confidence)):
@@ -125,14 +143,23 @@ def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default
                 #thickness = 2
                 #cv2.rectangle(image?, start_point, end_point, color, thickness)
                 color = colors[j]
-                image1 = cv2.rectangle(image1, (gt_boxes[i, 4], gt_boxes[i, 5]), (gt_boxes[i, 6], gt_boxes[i, 7]), color, thickness)
+                image1 = cv2.rectangle(image1, (gt_boxes1[i, 4], gt_boxes1[i, 5]), (gt_boxes1[i, 6], gt_boxes1[i, 7]), color, thickness)
 
                 ious = iou(boxs_default, gt_boxes[i, 4], gt_boxes[i, 5], gt_boxes[i, 6], gt_boxes[i, 7])
                 ious_true = ious > 0.5
 
                 selected_boxes = boxs_default[ious_true, :]
+                if len(selected_boxes) == 0:
+                    best_index = np.argmax(ious)
+                    selected_boxes = np.vstack((selected_boxes, boxs_default[best_index, :]))
+
+                selected_boxes = convert_to_real_scale(selected_boxes, w, h)
+                
+                # print(selected_boxes.shape)
+                # print(selected_boxes)
+                
                 for k in range(len(selected_boxes)):
-                    image2 = cv2.rectangle(image2, (selected_boxes[k, 4], gt_boxes[k, 5]), (gt_boxes[k, 6], gt_boxes[k, 7]), color, thickness)
+                    image2 = cv2.rectangle(image2, (selected_boxes[k, 4], selected_boxes[k, 5]), (selected_boxes[k, 6], selected_boxes[k, 7]), color, thickness)
 
     #pred
     for i in range(len(pred_boxes)):
@@ -155,7 +182,7 @@ def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default
     #if you are using a server, you may not be able to display the image.
     #in that case, please save the image using cv2.imwrite and check the saved image for visualization.
 
-    cv2.imwrite(f"results/{windowname}/{prefix}-{image_id}", image)
+    cv2.imwrite(f"results/{windowname}/{prefix}-{image_id}.jpg", image)
     # if windowname == "val":
     #     cv2.imwrite('', image)
     # elif windowname == "test":
@@ -198,13 +225,18 @@ def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.5, thresh
 
         max_index = np.unravel_index(np.argmax(confidence_[:, :-1], axis=None), (num_of_boxes, num_of_classes-1))
         
+        # print(num_of_boxes)
+        # print(num_of_classes)
+        # print(max_index)
+        # print(confidence_[max_index])
+
         if confidence_[max_index] > threshold:
             x_confidence = confidence_[max_index[0], :-1] # discard background
             x_box = actual_boxes[max_index[0], :]
             corresponding_default_box = boxs_default[max_index[0], :]
-            np.delete(confidence_, max_index[0], 0)
-            np.delete(actual_boxes, max_index[0], 0)
-            np.delete(boxs_default, max_index[0], 0)
+            confidence_ = np.delete(confidence_, max_index[0], 0)
+            actual_boxes = np.delete(actual_boxes, max_index[0], 0)
+            boxs_default = np.delete(boxs_default, max_index[0], 0)
 
             # suppressed_confidence.append(x_confidence)
             suppressed_boxes.append(x_box)
@@ -213,10 +245,11 @@ def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.5, thresh
 
             ious = iou(actual_boxes, x_box[4], x_box[5], x_box[6], x_box[7])
 
-            ious_true = ious > threshold
+            ious_true = ious > overlap
 
-            np.delete(actual_boxes, ious_true, 0)
-            np.delete(confidence_, ious_true, 0)
+            actual_boxes = np.delete(actual_boxes, ious_true, 0)
+            confidence_ = np.delete(confidence_, ious_true, 0)
+            boxs_default = np.delete(boxs_default, ious_true, 0)
 
         else:
             break
