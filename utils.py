@@ -118,6 +118,12 @@ def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default
 
     gt_boxes1 = convert_to_real_scale(gt_boxes, w, h)
     # boxs_default = convert_to_real_scale(boxs_default, w, h)
+
+    # print(len(pred_boxes))
+    if len(pred_boxes) == 0:
+        print(f"Detection fail. image-[{image_id}] no box detected")
+        return
+
     pred_boxes = convert_to_real_scale(pred_boxes, w, h)
     corresponding_default_boxes = convert_to_real_scale(corresponding_default_boxes, w, h)
     
@@ -188,7 +194,7 @@ def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default
     # elif windowname == "test":
     #     cv2.imwrite('', image)
 
-def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.5, threshold=0.5):
+def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.3, threshold=0.5):
     #input:
     #confidence_  -- the predicted class labels from SSD, [num_of_boxes, num_of_classes]
     #box_         -- the predicted bounding boxes from SSD, [num_of_boxes, 4]
@@ -260,14 +266,31 @@ def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.5, thresh
     
     return suppressed_boxes, pred_cat_ids, corresponding_default_boxes
 
+def no_suppression(confidence_, box_, boxs_default, threshold=0.5):
+    actual_boxes = get_actual_boxes(box_, boxs_default)
 
+    boxes = []
+    pred_cat_ids = []
+    corresponding_default_boxes = []
 
+    while confidence_.shape[0] > 0:
+        num_of_boxes, num_of_classes = confidence_.shape
 
+        max_index = np.unravel_index(np.argmax(confidence_[:, :-1], axis=None), (num_of_boxes, num_of_classes-1))
 
+        if confidence_[max_index] > threshold:
+            boxes.append(actual_boxes[max_index[0], :])
+            pred_cat_ids.append(np.argmax(confidence_[max_index[0], :-1]))
+            corresponding_default_boxes.append(boxs_default[max_index[0], :])
+            confidence_ = np.delete(confidence_, max_index[0], 0)
+            actual_boxes = np.delete(actual_boxes, max_index[0], 0)
+            boxs_default = np.delete(boxs_default, max_index[0], 0)
 
+        else:
+            break
 
-
-
-
-
-
+    boxes = np.array(boxes)
+    pred_cat_ids = np.array(pred_cat_ids)
+    corresponding_default_boxes = np.array(corresponding_default_boxes)
+    
+    return boxes, pred_cat_ids, corresponding_default_boxes

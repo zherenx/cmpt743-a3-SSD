@@ -129,7 +129,8 @@ if not args.test:
 else:
     #TEST
     # dataset_test = COCO("data/test/images/", "data/test/annotations/", class_num, boxs_default, train = False, image_size=320)
-    dataset_test = COCO("data/test_mock/images/", "data/test_mock/annotations/", class_num, boxs_default, train = False, image_size=320)
+    # dataset_test = COCO("data/test_mock/images/", "data/test_mock/annotations/", class_num, boxs_default, train = False, image_size=320)
+    dataset_test = COCO("data/test/images/", "data/test/annotations_fake/", class_num, boxs_default, train = False, image_size=320)
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=1, shuffle=False, num_workers=0)
     # network.load_state_dict(torch.load('network.pth'))
     network.load_state_dict(torch.load('checkpoints/network-40.pth'))
@@ -154,8 +155,13 @@ else:
         # visualize_pred("test", pred_confidence_, pred_box_, ann_confidence_[0].numpy(), ann_box_[0].numpy(), images_[0].numpy(), boxs_default)
 
         print(f"Processing image {i}")
+        
         suppressed_boxes, pred_cat_ids, corresponding_default_boxes = non_maximum_suppression(pred_confidence_,pred_box_,boxs_default)
         visualize_pred_custom("test", suppressed_boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy(), "test", i)
+        
+        boxes, pred_cat_ids, corresponding_default_boxes = no_suppression(pred_confidence_,pred_box_,boxs_default)
+        visualize_pred_custom("test_no_sup", boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy(), "test-no-sup", i)
+        
         # cv2.waitKey(1000)
 
 
