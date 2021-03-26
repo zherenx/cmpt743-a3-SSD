@@ -15,7 +15,9 @@ from math import sqrt
 
 
 def generate_box(x, y, w, h):
-    box = np.array([x, y, w, h, x-w/2.0, y-h/2.0, x+w/2.0, y+h/2.0], dtype=float)
+    # box = np.array([x, y, w, h, x-w/2.0, y-h/2.0, x+w/2.0, y+h/2.0], dtype=float)
+    # box = np.transpose(np.vstack((x, y, w, h, x-w/2.0, y-h/2.0, x+w/2.0, y+h/2.0)))
+    box = np.column_stack((x, y, w, h, x-w/2.0, y-h/2.0, x+w/2.0, y+h/2.0))
     box = np.clip(box, a_min=0, a_max=1)
     return box
 
@@ -208,3 +210,35 @@ class COCO(torch.utils.data.Dataset):
             match(ann_box, ann_confidence, self.boxs_default, self.threshold, cat_id, x_min, y_min, x_max, y_max)
             
         return img, ann_box, ann_confidence
+
+if __name__ == "__main__":
+    a = np.array([0.5, 0.5, 0.5, 0.5])
+    print(a)
+    print(a.shape)
+
+    A1 = generate_box(0.5, 0.5, 0.5, 0.5)
+    print(A1)
+    print(A1.shape)
+    print()
+
+    A2 = generate_box(a, a, a, a)
+    print(A2)
+    print(A2.shape)
+    print()
+
+    a = np.ones((1, 4)) * 0.5
+    print(a)
+    print(a.shape)
+
+    A2 = generate_box(a, a, a, a)
+    print(A2)
+    print(A2.shape)
+    print()
+
+    a = np.ones((4, 1)) * 0.5
+    print(a)
+    print(a.shape)
+
+    A2 = generate_box(a, a, a, a)
+    print(A2)
+    print(A2.shape)
