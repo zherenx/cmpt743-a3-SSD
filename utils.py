@@ -294,3 +294,50 @@ def no_suppression(confidence_, box_, boxs_default, threshold=0.5):
     corresponding_default_boxes = np.array(corresponding_default_boxes)
     
     return boxes, pred_cat_ids, corresponding_default_boxes
+
+def save_predicted_boxes(pred_boxes, cat_ids, image_id):
+    path = "data/test_mock/images/"
+    # path = "data/test/images/"
+    out_path = "predicted_boxes/test/"
+    if image_id <= 9:
+        img_name = path+"0000"+str(image_id)+".jpg"
+        filename = out_path+"0000"+str(image_id)+".txt"
+    elif image_id <= 99:
+        img_name = path+"000"+str(image_id)+".jpg"
+        filename = out_path+"000"+str(image_id)+".txt"
+    elif image_id <= 999:
+        img_name = path+"00"+str(image_id)+".jpg"
+        filename = out_path+"00"+str(image_id)+".txt"
+    else:
+        img_name = path+"0"+str(image_id)+".jpg"
+        filename = out_path+"0"+str(image_id)+".txt"
+
+    img = cv2.imread(img_name)
+    img_h, img_w, img_c = img.shape
+
+    f = open(filename, "w")
+
+    if len(pred_boxes) == 0:
+        print(f"Detection failed for image {image_id}")
+        f.close()
+        return
+
+    for i in range(len(pred_boxes)):
+        x_min = pred_boxes[i, 4]
+        y_min = pred_boxes[i, 5]
+        x_max = pred_boxes[i, 6]
+        y_max = pred_boxes[i, 7]
+
+        x_c = (x_min + x_max) / 2.0
+        y_c = (y_min + y_max) / 2.0
+        w = x_max - x_min
+        h = y_max - y_min
+
+        x_c = x_c * img_w
+        y_c = y_c * img_h
+        w = w * img_w
+        h = h * img_h
+
+        f.write(f"{cat_ids[i]} {x_c} {y_c} {w} {h}\n")
+    
+    f.close()
