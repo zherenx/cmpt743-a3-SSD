@@ -236,7 +236,10 @@ class COCO(torch.utils.data.Dataset):
 
             match(ann_box, ann_confidence, self.boxs_default, self.threshold, cat_id, x_min, y_min, x_max, y_max)
             
-        return img, ann_box, ann_confidence
+        if self.train:
+            return img, ann_box, ann_confidence
+        else:
+            return img, ann_box, ann_confidence, int(self.img_names[index][:-4])
 
 if __name__ == "__main__":
     a = np.array([0.5, 0.5, 0.5, 0.5])
