@@ -129,15 +129,17 @@ if not args.test:
 else:
     #TEST
     # dataset_test = COCO("data/test/images/", "data/test/annotations/", class_num, boxs_default, train = False, image_size=320)
+    # dataset_test = COCO("data/train/images/", "data/train/annotations/", class_num, boxs_default, train = False, image_size=320)
     # dataset_test = COCO("data/test_mock/images/", "data/test_mock/annotations/", class_num, boxs_default, train = False, image_size=320)
     dataset_test = COCO("data/test/images/", "data/test/annotations_fake/", class_num, boxs_default, train = False, image_size=320)
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=1, shuffle=False, num_workers=0)
     # network.load_state_dict(torch.load('network.pth'))
-    network.load_state_dict(torch.load('checkpoints/network-40.pth'))
+    network.load_state_dict(torch.load('checkpoints/network-100.pth'))
     network.eval()
     
     for i, data in enumerate(dataloader_test, 0):
-        images_, ann_box_, ann_confidence_ = data
+        images_, ann_box_, ann_confidence_, image_id = data
+        image_id = image_id.item()
         images = images_.cuda()
         ann_box = ann_box_.cuda()
         ann_confidence = ann_confidence_.cuda()
@@ -154,13 +156,15 @@ else:
         
         # visualize_pred("test", pred_confidence_, pred_box_, ann_confidence_[0].numpy(), ann_box_[0].numpy(), images_[0].numpy(), boxs_default)
 
-        print(f"Processing image {i}")
+        print(f"Processing image {image_id}")
         
+        tmp = "test"
         suppressed_boxes, pred_cat_ids, corresponding_default_boxes = non_maximum_suppression(pred_confidence_,pred_box_,boxs_default)
-        visualize_pred_custom("test", suppressed_boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy(), "test", i)
-        
+        visualize_pred_custom(tmp, suppressed_boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy(), tmp, image_id)
+        save_predicted_boxes(suppressed_boxes, pred_cat_ids, image_id, tmp)
+
         boxes, pred_cat_ids, corresponding_default_boxes = no_suppression(pred_confidence_,pred_box_,boxs_default)
-        visualize_pred_custom("test_no_sup", boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy(), "test-no-sup", i)
+        visualize_pred_custom(tmp+"_no_sup", boxes, pred_cat_ids, corresponding_default_boxes, ann_confidence_[0].numpy(), ann_box_[0].numpy(), boxs_default, images_[0].numpy(), tmp+"_no_sup", image_id)
         
         # cv2.waitKey(1000)
 
