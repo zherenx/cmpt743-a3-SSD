@@ -12,6 +12,7 @@ import numpy as np
 import os
 import cv2
 from math import sqrt
+from random import random
 
 
 def generate_box(x, y, w, h):
@@ -181,13 +182,23 @@ class COCO(torch.utils.data.Dataset):
         #note: please make sure x_min,y_min,x_max,y_max are normalized with respect to the width or height of the image.
         #For example, point (x=100, y=200) in a image with (width=1000, height=500) will be normalized to (x/width=0.1,y/height=0.4)
         
-        # TODO: augmentation 
-
         img = cv2.imread(img_name)
         img_h, img_w, img_c = img.shape
 
+        crop_threshold = 0.1
+        if self.train:
+            # a -> top left, b -> bottom right
+            ax = int(random() * img_w * crop_threshold)
+            ay = int(random() * img_h * crop_threshold)
+            bx = int(img_w - random() * img_w * crop_threshold)
+            by = int(img_h - random() * img_h * crop_threshold)
+
+            img = img[ay:by, ax:bx, :]
+            img_h = by - ay
+            img_w = bx - ax
+
         img = cv2.resize(img, (320, 320))
-        img = np.transpose(img, (2, 0, 1)) # Why do we need to do this?? and should it be (2, 1, 0) or (2, 0, 1)?
+        img = np.transpose(img, (2, 0, 1)) 
 
         annotations_txt = open(ann_name)
         annotations = annotations_txt.readlines()
@@ -203,6 +214,20 @@ class COCO(torch.utils.data.Dataset):
             h = float(line[4])
             x_max = x_min + w
             y_max = y_min + h
+
+            if self.train:
+                x_min = x_min - ax
+                y_min = y_min - ay
+                x_max = x_max - ax
+                y_max = y_max - ay
+                if x_min < 0:
+                    x_min = 0
+                if y_min < 0:
+                    y_min = 0
+                if x_max > img_w:
+                    x_max = img_w
+                if y_max > img_h:
+                    y_max = img_h
             
             x_min = x_min / img_w
             y_min = y_min / img_h
