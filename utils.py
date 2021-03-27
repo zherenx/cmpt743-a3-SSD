@@ -188,7 +188,7 @@ def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default
     #if you are using a server, you may not be able to display the image.
     #in that case, please save the image using cv2.imwrite and check the saved image for visualization.
 
-    cv2.imwrite(f"results/{windowname}/images/{prefix}-{image_id}.jpg", image)
+    cv2.imwrite(f"results/{windowname}/{prefix}-{image_id}.jpg", image)
     # if windowname == "val":
     #     cv2.imwrite('', image)
     # elif windowname == "test":
@@ -295,10 +295,9 @@ def no_suppression(confidence_, box_, boxs_default, threshold=0.5):
     
     return boxes, pred_cat_ids, corresponding_default_boxes
 
-def save_predicted_boxes(pred_boxes, cat_ids, image_id):
-    path = "data/test_mock/images/"
-    # path = "data/test/images/"
-    out_path = "predicted_boxes/test/"
+def save_predicted_boxes(pred_boxes, cat_ids, image_id, tmp="test"):
+    path = "data/"+tmp+"/images/"
+    out_path = "predicted_boxes/"+tmp+"/"
     if image_id <= 9:
         img_name = path+"0000"+str(image_id)+".jpg"
         filename = out_path+"0000"+str(image_id)+".txt"
@@ -333,11 +332,13 @@ def save_predicted_boxes(pred_boxes, cat_ids, image_id):
         w = x_max - x_min
         h = y_max - y_min
 
+        x_min = x_min * img_w
+        y_min = y_min * img_h
         x_c = x_c * img_w
         y_c = y_c * img_h
         w = w * img_w
         h = h * img_h
 
-        f.write(f"{cat_ids[i]} {x_c} {y_c} {w} {h}\n")
+        f.write(f"{cat_ids[i]} {x_min} {y_min} {w} {h}\n")
     
     f.close()
