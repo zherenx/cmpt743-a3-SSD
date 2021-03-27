@@ -188,13 +188,13 @@ def visualize_pred_custom(windowname, pred_boxes, cat_ids, corresponding_default
     #if you are using a server, you may not be able to display the image.
     #in that case, please save the image using cv2.imwrite and check the saved image for visualization.
 
-    cv2.imwrite(f"results/{windowname}/{prefix}-{image_id}.jpg", image)
+    cv2.imwrite(f"results/{windowname}/images/{prefix}-{image_id}.jpg", image)
     # if windowname == "val":
     #     cv2.imwrite('', image)
     # elif windowname == "test":
     #     cv2.imwrite('', image)
 
-def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.3, threshold=0.5):
+def non_maximum_suppression(confidence_, box_, boxs_default, overlap=0.25, threshold=0.5):
     #input:
     #confidence_  -- the predicted class labels from SSD, [num_of_boxes, num_of_classes]
     #box_         -- the predicted bounding boxes from SSD, [num_of_boxes, 4]
